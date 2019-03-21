@@ -20,34 +20,45 @@ type Token(kind: TokenID,value: string) =
     member x.kind = kind
     member x.value = value
 
+type TokenParserState(acc: string option,items : Token list) =
+    member x.acc = acc 
+    member x.items = items 
 
-let private digit_token (items: Token list) (str: string) =
-        let is_digit (x: char) = 
-            printfn "The Char is `%c`" x
-            (int8 x) >= 48y && (int8 x) <= 57y || (x = '.')
+let private append_token (state: TokenParserState) (token: Token) =
+        let items = state.items
+        match state.acc with 
+            | None -> TokenParserState(None,(token:: items))    
+            | Some(value) -> TokenParserState(None,token::Token(TokenID.DIGIT,value) :: items)
 
-        if str.Length > 0 &&  (String.forall is_digit str)  then
-            Token(TokenID.DIGIT,str) :: items
+let private is_digit (x: char) =  (int8 x) >= 48y && (int8 x) <= 57y || (x = '.')
+let private digit_token (state: TokenParserState) (c: char) =
+        if  (is_digit c)  then
+            let items = state.items
+            match state.acc with 
+                | None -> TokenParserState(Some(c.ToString()),items)
+                | Some(acc)-> TokenParserState(Some(acc + c.ToString()),items)
          else 
-            items
-     
- 
-let private token (items: Token list) (current:string) =
+            state
+
+
+let private token (state: TokenParserState) (current: char ) =
     match current with
-        | "+" -> Token(TokenID.PLUS,"") :: items
-        | "-" -> Token(TokenID.MINUS,"") :: items
-        | "*" -> Token(TokenID.TIMES,"") :: items
-        | "/" -> Token(TokenID.DIV,"") :: items
-        | "(" -> Token(TokenID.OPEN_PAREN,"") :: items 
-        | ")" -> Token(TokenID.CLOSE_PAREN,"") :: items
-        | _ -> digit_token items current
+        | '+' -> append_token state (Token(TokenID.PLUS,""))
+        | '-' -> append_token state (Token(TokenID.MINUS,""))
+        | '*' -> append_token state (Token(TokenID.TIMES,"")) 
+        | '/' -> append_token state (Token(TokenID.DIV,"")) 
+        | '(' -> append_token state (Token(TokenID.OPEN_PAREN,"")) 
+        | ')' -> append_token state (Token(TokenID.CLOSE_PAREN,"")) 
+        | _ -> digit_token state current
 
 
 let parse (str:string) =
-    let strs = str.Split(' ')
-    Seq.toArray(Seq.rev(Seq.fold token [] strs))
-
-
+    let initState = TokenParserState(None,[])
+    let finalState = Seq.fold token initState str
+    let items = finalState.items
+    match finalState.acc with 
+        | None -> Seq.toArray(Seq.rev(items))
+        | Some(value) -> Seq.toArray(Seq.rev(Token(TokenID.DIGIT,value) :: items))
 
 let print (tokens: Token[]) = 
     let show (token: Token) =

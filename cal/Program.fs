@@ -11,7 +11,7 @@ let main argv =
     |> List.map (fun expr -> expr, evalRpnExpr(expr.Split(' ')))
     |> List.iter (fun (expr, result) -> printfn "(%s) = %A" expr result)
 
-    " 1 + 2 * 3 + 4.6 " 
+    " 1 + 2 * 3 + (-4.6) " 
     |> TokenParser.parse 
     |> TokenParser.print 
     0
