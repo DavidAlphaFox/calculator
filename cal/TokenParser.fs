@@ -15,11 +15,23 @@ type TokenID =
     | CLOSE_PAREN = 5
     | DIGIT = 6
 
+
 type Token(kind: TokenID,value: string) =
     member x.kind = kind
     member x.value = value
 
 
+let private digit_token (items: Token list) (str: string) =
+        let is_digit (x: char) = 
+            printfn "The Char is `%c`" x
+            (int8 x) >= 48y && (int8 x) <= 57y || (x = '.')
+
+        if str.Length > 0 &&  (String.forall is_digit str)  then
+            Token(TokenID.DIGIT,str) :: items
+         else 
+            items
+     
+ 
 let private token (items: Token list) (current:string) =
     match current with
         | "+" -> Token(TokenID.PLUS,"") :: items
@@ -28,11 +40,14 @@ let private token (items: Token list) (current:string) =
         | "/" -> Token(TokenID.DIV,"") :: items
         | "(" -> Token(TokenID.OPEN_PAREN,"") :: items 
         | ")" -> Token(TokenID.CLOSE_PAREN,"") :: items
-        | _ -> Token(TokenID.DIGIT,current) :: items
+        | _ -> digit_token items current
+
 
 let parse (str:string) =
     let strs = str.Split(' ')
     Seq.toArray(Seq.rev(Seq.fold token [] strs))
+
+
 
 let print (tokens: Token[]) = 
     let show (token: Token) =
