@@ -2,6 +2,7 @@
 
 open System
 open Calculator.RpnCalculator
+open Calculator.Parser
 
 [<EntryPoint>]
 let main argv =
@@ -9,5 +10,10 @@ let main argv =
     "90 34 12 33 55 66 + * - + -"; "90 3 -" ]
     |> List.map (fun expr -> expr, evalRpnExpr(expr.Split(' ')))
     |> List.iter (fun (expr, result) -> printfn "(%s) = %A" expr result)
+
+    "1 + 2 * 3 + 4.6" 
+    |> TokenParser.parse 
+    |> TokenParser.print 
+
     Console.ReadLine() |> ignore
     0
